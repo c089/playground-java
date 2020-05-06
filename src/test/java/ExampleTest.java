@@ -1,10 +1,15 @@
-import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import net.jqwik.api.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 
 public class ExampleTest {
-    @Test
+    @Example
     void testExample() {
-        assertEquals(1, 1);
+        assertThat(1, equalTo(1));
+    }
+
+    @Property
+    void additionIsAssociative(@ForAll int a, @ForAll int b) {
+        assertThat(a+b, equalTo(b+a));
     }
 }

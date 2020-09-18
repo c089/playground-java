@@ -30,3 +30,13 @@ tasks.test {
 configure<JavaPluginConvention> {
     sourceCompatibility = JavaVersion.VERSION_15
 }
+
+tasks.withType<JavaCompile> {
+    options.compilerArgs.add("--enable-preview")
+}
+tasks.withType<Test> {
+    jvmArgs("--enable-preview")
+}
+tasks.withType<JavaExec> {
+    jvmArgs("--enable-preview")
+}

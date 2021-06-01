@@ -5,7 +5,7 @@ plugins {
 group = "org.example"
 version = "1.0-SNAPSHOT"
 
-val jqwikVersion = "1.3.5"
+val jqwikVersion = "1.5.1"
 val hamcrestVersion = "2.2"
 val junitVersion = "5.7.2"
 

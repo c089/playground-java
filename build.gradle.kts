@@ -7,7 +7,7 @@ version = "1.0-SNAPSHOT"
 
 val jqwikVersion = "1.3.5"
 val hamcrestVersion = "2.2"
-val junitVersion = "5.7.0"
+val junitVersion = "5.7.2"
 
 repositories {
     mavenCentral()

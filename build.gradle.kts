@@ -7,7 +7,7 @@ version = "1.0-SNAPSHOT"
 
 val jqwikVersion = "1.5.1"
 val hamcrestVersion = "2.2"
-val junitVersion = "5.7.2"
+val junitVersion = "5.8.2"
 val mockitoVersion = "3.+"
 
 repositories {
@@ -15,8 +15,8 @@ repositories {
 }
 
 dependencies {
-    testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
+    testImplementation(platform("org.junit:junit-bom:${junitVersion}"))
+    testImplementation("org.junit.jupiter:junit-jupiter:${junitVersion}")
     testImplementation("org.hamcrest:hamcrest:${hamcrestVersion}")
     testImplementation("net.jqwik:jqwik:${jqwikVersion}")
     testImplementation("org.mockito:mockito-core:${mockitoVersion}")

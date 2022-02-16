@@ -30,7 +30,7 @@ tasks.test {
 }
 
 configure<JavaPluginConvention> {
-    sourceCompatibility = JavaVersion.VERSION_16
+    sourceCompatibility = JavaVersion.VERSION_17
 }
 
 tasks.withType<JavaCompile> {

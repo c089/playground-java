@@ -23,7 +23,7 @@ dependencies {
 }
 
 tasks.test {
-    useJUnitPlatform { includeEngines("jqwik") }
+    useJUnitPlatform { includeEngines("junit-jupiter", "jqwik") }
     testLogging {
         events("passed", "skipped", "failed")
     }

@@ -15,6 +15,15 @@ repositories {
 }
 
 dependencies {
+    runtimeOnly("org.slf4j:slf4j-log4j12:1.7.36")
+
+    implementation("org.hibernate:hibernate-core:5.6.7.Final")
+    implementation("org.glassfish.jaxb:jaxb-runtime:3.0.2")
+    implementation("org.postgresql:postgresql:42.3.3")
+
+    testImplementation("org.testcontainers:testcontainers:1.16.3")
+    testImplementation("org.testcontainers:postgresql:1.16.3")
+
     testImplementation(platform("org.junit:junit-bom:${junitVersion}"))
     testImplementation("org.junit.jupiter:junit-jupiter:${junitVersion}")
     testImplementation("org.hamcrest:hamcrest:${hamcrestVersion}")

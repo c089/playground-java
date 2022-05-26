@@ -2,6 +2,12 @@ plugins {
     java
 }
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+}
+
 group = "org.example"
 version = "1.0-SNAPSHOT"
 
@@ -37,10 +43,6 @@ tasks.test {
     testLogging {
         events("passed", "skipped", "failed")
     }
-}
-
-configure<JavaPluginConvention> {
-    sourceCompatibility = JavaVersion.VERSION_17
 }
 
 tasks.withType<JavaCompile> {

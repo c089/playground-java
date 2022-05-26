@@ -1,7 +1,8 @@
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
 
-import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
+
 
 public class TicTacToeTest {
     @Property

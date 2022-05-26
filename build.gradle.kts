@@ -29,6 +29,7 @@ dependencies {
     testImplementation("org.hamcrest:hamcrest:${hamcrestVersion}")
     testImplementation("net.jqwik:jqwik:${jqwikVersion}")
     testImplementation("org.mockito:mockito-core:${mockitoVersion}")
+    testImplementation("org.assertj:assertj-core:3.22.0")
 }
 
 tasks.test {

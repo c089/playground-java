@@ -21,6 +21,7 @@ repositories {
 }
 
 dependencies {
+    implementation("org.slf4j:jul-to-slf4j:1.7.36")
     runtimeOnly("org.slf4j:slf4j-log4j12:1.7.36")
 
     implementation("org.hibernate:hibernate-core:5.6.7.Final")
@@ -36,6 +37,7 @@ dependencies {
     testImplementation("net.jqwik:jqwik:${jqwikVersion}")
     testImplementation("org.mockito:mockito-core:${mockitoVersion}")
     testImplementation("org.assertj:assertj-core:3.22.0")
+    testImplementation("io.rest-assured:rest-assured:5.1.0")
 }
 
 tasks.test {

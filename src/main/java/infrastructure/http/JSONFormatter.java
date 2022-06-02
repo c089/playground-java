@@ -1,17 +1,16 @@
 package infrastructure.http;
 
+import com.google.gson.Gson;
 import domain.DeleteServerResponse;
+import domain.ResourceID;
 
-import java.util.stream.Collectors;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public class JSONFormatter {
     public static String formatAsJSON(DeleteServerResponse.DeletionRequestAccepted r) {
-        final String ids = r.resourcesToDelete()
-                .stream()
-                .map(r_ -> "\"" + r_.id().toString() + "\"")
-                .collect(Collectors.joining(",", "[", "]"));
-        return """
-                {"affectedResources": %s}
-                """.formatted(ids);
+        final List<UUID> uuids = r.resourcesToDelete().stream().map(ResourceID::id).toList();
+        return new Gson().toJson(Map.of("affectedResources", uuids));
     }
 }

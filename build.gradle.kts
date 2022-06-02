@@ -24,6 +24,7 @@ dependencies {
     implementation("org.slf4j:jul-to-slf4j:1.7.36")
     implementation("org.springframework.data:spring-data-jpa:2.7.0")
     implementation("com.sparkjava:spark-core:2.9.3")
+    implementation("com.google.code.gson:gson:2.9.0")
     runtimeOnly("org.slf4j:slf4j-log4j12:1.7.36")
 
     implementation("org.hibernate:hibernate-core:5.6.7.Final")

@@ -6,7 +6,7 @@ import ports.driven.ServersRepository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public abstract class RepositoryAdapaterContract {
+public abstract class RepositoryAdapterContract {
     @Test
     void givenANewServerItHasNoVolumes() {
         final ServersRepository repositoryAdapter = createRepository();

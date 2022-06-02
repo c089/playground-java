@@ -1,6 +1,6 @@
 package infrastructure.springdata;
 
-import infrastructure.RepositoryAdapaterContract;
+import infrastructure.RepositoryAdapterContract;
 import org.springframework.data.jpa.repository.support.JpaRepositoryFactory;
 import org.testcontainers.containers.PostgreSQLContainer;
 import ports.driven.ServersRepository;
@@ -8,7 +8,7 @@ import ports.driven.ServersRepository;
 import javax.persistence.EntityManager;
 import javax.persistence.Persistence;
 
-public class SpringDataRepositoryAdapaterTest extends RepositoryAdapaterContract {
+public class SpringDataRepositoryAdapterTest extends RepositoryAdapterContract {
 
     @Override
     protected ServersRepository createRepository() {

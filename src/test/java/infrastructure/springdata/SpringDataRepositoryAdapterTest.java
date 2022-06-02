@@ -17,23 +17,22 @@ public class SpringDataRepositoryAdapterTest extends RepositoryAdapterContract {
         final JpaRepositoryFactory factory = createRepositoryFactory();
         SpringBasedServersRepository repository = factory.getRepository(SpringBasedServersRepository.class);
 
-        final SpringDataServerRepositoryAdapter repositoryAdapter = new SpringDataServerRepositoryAdapter(repository);
-        return repositoryAdapter;
+        return new SpringDataServerRepositoryAdapter(repository);
     }
 
     private JpaRepositoryFactory createRepositoryFactory() {
         final EntityManager entityManager = Persistence.createEntityManagerFactory("ports-and-adapters").createEntityManager();
-        final JpaRepositoryFactory factory = new JpaRepositoryFactory(entityManager);
-        return factory;
+        return new JpaRepositoryFactory(entityManager);
     }
 
     private void setupDatabase() {
-        final PostgreSQLContainer postgreSQLContainer = new PostgreSQLContainer<>("postgres:14.2")
+        try (var postgreSQLContainer = new PostgreSQLContainer("postgres:14.2")
                 .withDatabaseName("servers")
                 .withUsername("postgres")
-                .withPassword("postgres");
-        postgreSQLContainer.start();
-        System.setProperty("db.port", postgreSQLContainer.getFirstMappedPort().toString());
+                .withPassword("postgres")) {
+            postgreSQLContainer.start();
+            System.setProperty("db.port", postgreSQLContainer.getFirstMappedPort().toString());
+        }
     }
 
 }

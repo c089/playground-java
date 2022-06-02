@@ -14,6 +14,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static domain.DeleteServerRequest.DeleteAttachedVolumesOption;
+import static domain.DeleteServerRequest.DeleteAttachedVolumesOption.DeleteAttachedVolumes;
+import static domain.DeleteServerRequest.DeleteAttachedVolumesOption.KeepAttachedVolumes;
+import static domain.DeleteServerResponse.CannotDeleteNonExistingServer;
+import static domain.DeleteServerResponse.DeletionRequestAccepted;
+
 public class JavaHTTPServerAdapter {
 
     private final HttpServer server;
@@ -45,24 +51,27 @@ public class JavaHTTPServerAdapter {
         final DeleteServerResponse deleteServerResponse = useCase.deleteServer(deleteServerRequest);
 
         switch (deleteServerResponse) {
-            case DeleteServerResponse.DeletionRequestAccepted r -> {
+            case DeletionRequestAccepted r -> {
                 exchange.getResponseHeaders().put("Content-Type", List.of("application/json"));
                 exchange.sendResponseHeaders(200, 0);
                 exchange.getResponseBody().write(JSONFormatter.formatAsJSON(r).getBytes());
             }
-            case DeleteServerResponse.CannotDeleteNonExistingServer ignored -> exchange.sendResponseHeaders(404, 0);
+            case CannotDeleteNonExistingServer ignored -> exchange.sendResponseHeaders(404, 0);
         }
     }
 
     private DeleteServerRequest understandRequest(HttpExchange exchange) {
         final String[] split = exchange.getRequestURI().getPath().split("/server/");
         final ServerID serverID = new ServerID(UUID.fromString(split[1]));
-        final DeleteServerRequest.DeleteAttachedVolumesOption deleteAttachedVolumes =
-                Optional.ofNullable(exchange.getRequestURI().getQuery())
-                        .filter(x -> x.equals("deleteVolumes=true"))
-                        .map(x -> DeleteServerRequest.DeleteAttachedVolumesOption.DeleteAttachedVolumes)
-                        .orElse(DeleteServerRequest.DeleteAttachedVolumesOption.KeepAttachedVolumes);
+        final DeleteAttachedVolumesOption deleteAttachedVolumes = keepOrDeleteAttachedVolumes(exchange);
         return new DeleteServerRequest(serverID, deleteAttachedVolumes);
+    }
+
+    private DeleteAttachedVolumesOption keepOrDeleteAttachedVolumes(HttpExchange exchange) {
+        return Optional.ofNullable(exchange.getRequestURI().getQuery())
+                .filter(x -> x.equals("deleteVolumes=true"))
+                .map(x -> DeleteAttachedVolumes)
+                .orElse(KeepAttachedVolumes);
     }
 
     void stop() {

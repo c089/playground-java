@@ -7,6 +7,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import static domain.DeleteServerRequest.DeleteAttachedVolumesOption.DeleteAttachedVolumes;
+import static domain.DeleteServerRequest.DeleteAttachedVolumesOption.KeepAttachedVolumes;
+import static domain.DeleteServerResponse.CannotDeleteNonExistingServer;
+import static domain.DeleteServerResponse.DeletionRequestAccepted;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class DeleteServerApplicationTest {
@@ -14,10 +18,10 @@ public class DeleteServerApplicationTest {
     public void givenAnExistingServerWhenIDeleteTheServerWithoutVolumesThenOnlyTheServerIsDeleted() {
         final Server server = aServer(List.of(aVolume(), aVolume()));
 
-        DeleteServerResponse result = service(List.of(server))
-                .deleteServer(new DeleteServerRequest(server.id(), DeleteServerRequest.DeleteAttachedVolumesOption.KeepAttachedVolumes));
+        DeleteServerResponse result = createService(List.of(server))
+                .deleteServer(new DeleteServerRequest(server.id(), KeepAttachedVolumes));
 
-        assertThat(result).isEqualTo(new DeleteServerResponse.DeletionRequestAccepted(List.of(server.id())));
+        assertThat(result).isEqualTo(new DeletionRequestAccepted(List.of(server.id())));
     }
 
     @Test
@@ -27,10 +31,10 @@ public class DeleteServerApplicationTest {
         Server server = aServer(List.of(volume1, volume2));
         final List<Server> servers = List.of(server);
 
-        DeleteServerResponse result = service(servers)
-                .deleteServer(new DeleteServerRequest(server.id(), DeleteServerRequest.DeleteAttachedVolumesOption.DeleteAttachedVolumes));
+        DeleteServerResponse result = createService(servers)
+                .deleteServer(new DeleteServerRequest(server.id(), DeleteAttachedVolumes));
 
-        assertThat(result).isEqualTo(new DeleteServerResponse.DeletionRequestAccepted(List.of(server.id(), volume1.id(), volume2.id())));
+        assertThat(result).isEqualTo(new DeletionRequestAccepted(List.of(server.id(), volume1.id(), volume2.id())));
     }
 
     @Test
@@ -38,13 +42,13 @@ public class DeleteServerApplicationTest {
         final ServerID serverID = new ServerID(UUID.randomUUID());
         List<Server> servers = Collections.emptyList();
 
-        DeleteServerResponse result = service(servers)
-                .deleteServer(new DeleteServerRequest(serverID, DeleteServerRequest.DeleteAttachedVolumesOption.KeepAttachedVolumes));
+        DeleteServerResponse result = createService(servers)
+                .deleteServer(new DeleteServerRequest(serverID, KeepAttachedVolumes));
 
-        assertThat(result).isEqualTo(new DeleteServerResponse.CannotDeleteNonExistingServer(serverID));
+        assertThat(result).isEqualTo(new CannotDeleteNonExistingServer(serverID));
     }
 
-    private DeleteServerApplication service(List<Server> servers) {
+    private DeleteServerApplication createService(List<Server> servers) {
         var serversRepository = new InMemoryServersRepositoryAdapter(servers);
         return new DeleteServerApplication(serversRepository);
     }

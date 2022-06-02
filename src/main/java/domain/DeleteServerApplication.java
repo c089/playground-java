@@ -1,5 +1,7 @@
 package domain;
 
+import domain.DeleteServerResponse.CannotDeleteNonExistingServer;
+import domain.DeleteServerResponse.DeletionRequestAccepted;
 import ports.driven.ServersRepository;
 import ports.driving.DeleteServerUseCase;
 
@@ -14,17 +16,25 @@ public class DeleteServerApplication implements DeleteServerUseCase {
     }
 
     @Override
-    public DeleteServerResponse deleteServer(DeleteServerRequest deleteServerRequest) {
-        if (!serversRepository.serverExists(deleteServerRequest.serverID())) {
-            return new DeleteServerResponse.CannotDeleteNonExistingServer(deleteServerRequest.serverID());
+    public DeleteServerResponse deleteServer(DeleteServerRequest request) {
+        if (!serversRepository.serverExists(request.serverID())) {
+            return new CannotDeleteNonExistingServer(request.serverID());
         }
 
-        var affectedResources = switch (deleteServerRequest.deleteAttachedVolumes()) {
+        var affectedResources = switch (request.deleteAttachedVolumes()) {
             case DeleteAttachedVolumes ->
-                    Stream.concat(Stream.of(deleteServerRequest.serverID()), serversRepository.findVolumesAttachedTo(deleteServerRequest.serverID()).map(Volume::id)).toList();
-            case KeepAttachedVolumes -> List.of(deleteServerRequest.serverID());
+                    serverAndVolumes(request.serverID(), serversRepository.findVolumesAttachedTo(request.serverID()));
+            case KeepAttachedVolumes -> onlyTheServer(request.serverID());
         };
-        return new DeleteServerResponse.DeletionRequestAccepted(affectedResources);
+        return new DeletionRequestAccepted(affectedResources);
+    }
+
+    private List<ServerID> onlyTheServer(ServerID serverID) {
+        return List.of(serverID);
+    }
+
+    private List<? extends ResourceID> serverAndVolumes(ServerID serverID, Stream<Volume> volumes) {
+        return Stream.concat(Stream.of(serverID), volumes.map(Volume::id)).toList();
     }
 
 }

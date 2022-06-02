@@ -1,10 +1,10 @@
-package infrastructure;
+package infrastructure.http;
 
 import domain.DeleteServerRequest;
+import domain.DeleteServerResponse;
 import domain.ServerID;
 import domain.VolumeID;
 import io.restassured.RestAssured;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ports.driving.DeleteServerUseCase;
@@ -13,33 +13,18 @@ import java.util.List;
 import java.util.UUID;
 
 import static domain.DeleteServerRequest.DeleteAttachedVolumesOption.KeepAttachedVolumes;
-import static domain.DeleteServerResponse.CannotDeleteNonExistingServer;
-import static domain.DeleteServerResponse.DeletionRequestAccepted;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-public class JavaHTTPServerAdapterTest {
-
-    private JavaHTTPServerAdapter httpApplication;
-    private DeleteServerUseCase useCase;
-
-    @BeforeEach
-    void setUp() {
-        useCase = mock(DeleteServerUseCase.class);
-        httpApplication = new JavaHTTPServerAdapter(useCase);
-    }
-
-    @AfterEach
-    void stop() {
-        httpApplication.stop();
-    }
+public abstract class HTTPServerAdapterContract {
+    protected DeleteServerUseCase useCase;
 
     @Test
     void returns404WhenServerCannotBeFound() {
         ServerID serverId = new ServerID(UUID.randomUUID());
-        when(useCase.deleteServer(any())).thenReturn(new CannotDeleteNonExistingServer(serverId));
+        when(useCase.deleteServer(any())).thenReturn(new DeleteServerResponse.CannotDeleteNonExistingServer(serverId));
 
         RestAssured
                 .given()
@@ -52,7 +37,7 @@ public class JavaHTTPServerAdapterTest {
     @Test
     void passesServerIDFromURLToUseCase() {
         ServerID serverId = new ServerID(UUID.randomUUID());
-        when(useCase.deleteServer(any())).thenReturn(new CannotDeleteNonExistingServer(serverId));
+        when(useCase.deleteServer(any())).thenReturn(new DeleteServerResponse.CannotDeleteNonExistingServer(serverId));
 
         RestAssured
                 .given()
@@ -66,7 +51,7 @@ public class JavaHTTPServerAdapterTest {
     void givenDeleteVolumesQueryParameterDeletesAllVolumes() {
         ServerID serverId = new ServerID(UUID.randomUUID());
         when(useCase.deleteServer(any()))
-                .thenReturn(new CannotDeleteNonExistingServer(serverId));
+                .thenReturn(new DeleteServerResponse.CannotDeleteNonExistingServer(serverId));
 
         RestAssured
                 .given()
@@ -86,14 +71,16 @@ public class JavaHTTPServerAdapterTest {
         VolumeID volume2Id = new VolumeID(UUID.randomUUID());
 
         when(useCase.deleteServer(any()))
-                .thenReturn(new DeletionRequestAccepted(List.of(serverId, volume1Id, volume2Id)));
+                .thenReturn(new DeleteServerResponse.DeletionRequestAccepted(List.of(serverId, volume1Id, volume2Id)));
 
         RestAssured
                 .given()
                 .when()
                 .delete("/server/" + serverId.id().toString())
                 .then()
+                .log().body()
                 .statusCode(is(equalTo(200)))
+                .contentType("application/json")
                 .body("affectedResources", is(equalTo(List.of(
                         serverId.id().toString(),
                         volume1Id.id().toString(),
@@ -101,4 +88,8 @@ public class JavaHTTPServerAdapterTest {
                 ))));
     }
 
+    @BeforeEach
+    void setUpUseCase() {
+        useCase = mock(DeleteServerUseCase.class);
+    }
 }

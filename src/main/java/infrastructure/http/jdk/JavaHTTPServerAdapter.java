@@ -1,10 +1,11 @@
-package infrastructure;
+package infrastructure.http.jdk;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import domain.DeleteServerRequest;
 import domain.DeleteServerResponse;
 import domain.ServerID;
+import infrastructure.http.JSONFormatter;
 import ports.driving.DeleteServerUseCase;
 
 import java.io.IOException;
@@ -12,9 +13,8 @@ import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
-class JavaHTTPServerAdapter {
+public class JavaHTTPServerAdapter {
 
     private final HttpServer server;
     private final DeleteServerUseCase useCase;
@@ -39,11 +39,9 @@ class JavaHTTPServerAdapter {
                 case DeleteServerResponse.DeletionRequestAccepted r -> {
                     exchange.getResponseHeaders().put("Content-Type", List.of("application/json"));
                     exchange.sendResponseHeaders(200, 0);
-                    exchange.getResponseBody().write(formatAsJSON(r).getBytes());
+                    exchange.getResponseBody().write(JSONFormatter.formatAsJSON(r).getBytes());
                 }
-                case DeleteServerResponse.CannotDeleteNonExistingServer x -> {
-                    exchange.sendResponseHeaders(404, 0);
-                }
+                case DeleteServerResponse.CannotDeleteNonExistingServer x -> exchange.sendResponseHeaders(404, 0);
             }
 
             exchange.close();
@@ -62,16 +60,6 @@ class JavaHTTPServerAdapter {
                         .map(x -> DeleteServerRequest.DeleteAttachedVolumesOption.DeleteAttachedVolumes)
                         .orElse(DeleteServerRequest.DeleteAttachedVolumesOption.KeepAttachedVolumes);
         return new DeleteServerRequest(serverID, deleteAttachedVolumes);
-    }
-
-    private String formatAsJSON(DeleteServerResponse.DeletionRequestAccepted r) {
-        final String ids = r.resourcesToDelete()
-                .stream()
-                .map(r_ -> "\"" + r_.id().toString() + "\"")
-                .collect(Collectors.joining(",", "[", "]"));
-        return """
-                {"affectedResources": %s}
-                """.formatted(ids);
     }
 
     void stop() {

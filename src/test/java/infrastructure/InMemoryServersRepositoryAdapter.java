@@ -7,6 +7,7 @@ import ports.driven.ServersRepository;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 public class InMemoryServersRepositoryAdapter implements ServersRepository {
@@ -26,5 +27,12 @@ public class InMemoryServersRepositoryAdapter implements ServersRepository {
                 .filter(x -> x.id().equals(server)).findFirst().map(Server::volumes)
                 .orElse(Collections.emptyList())
                 .stream();
+    }
+
+    @Override
+    public Server createServer() {
+        final Server newServer = new Server(new ServerID(UUID.randomUUID()), Collections.emptyList());
+        this.servers = Stream.concat(this.servers.stream(), Stream.of(newServer)).toList();
+        return newServer;
     }
 }

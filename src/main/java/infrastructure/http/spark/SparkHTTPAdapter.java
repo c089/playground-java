@@ -1,6 +1,7 @@
 package infrastructure.http.spark;
 
 import domain.DeleteServerRequest;
+import domain.DeleteServerRequest.DeleteAttachedVolumesOption;
 import domain.DeleteServerResponse;
 import domain.ServerID;
 import infrastructure.http.JSONFormatter;
@@ -12,6 +13,8 @@ import java.util.UUID;
 
 import static domain.DeleteServerRequest.DeleteAttachedVolumesOption.DeleteAttachedVolumes;
 import static domain.DeleteServerRequest.DeleteAttachedVolumesOption.KeepAttachedVolumes;
+import static domain.DeleteServerResponse.CannotDeleteNonExistingServer;
+import static domain.DeleteServerResponse.DeletionRequestAccepted;
 
 public class SparkHTTPAdapter {
     private final DeleteServerUseCase useCase;
@@ -27,12 +30,12 @@ public class SparkHTTPAdapter {
             final DeleteServerResponse deleteServerResponse = this.useCase.deleteServer(deleteServerRequest);
 
             return switch (deleteServerResponse) {
-                case DeleteServerResponse.DeletionRequestAccepted x -> {
+                case DeletionRequestAccepted x -> {
                     res.status(200);
                     res.type("application/json");
                     yield JSONFormatter.formatAsJSON(x);
                 }
-                case DeleteServerResponse.CannotDeleteNonExistingServer x -> {
+                case CannotDeleteNonExistingServer x -> {
                     res.status(404);
                     yield "";
                 }
@@ -42,10 +45,12 @@ public class SparkHTTPAdapter {
 
     private DeleteServerRequest understandDeleteServerRequest(Request req) {
         final ServerID serverId = new ServerID(UUID.fromString(req.params("serverId")));
-        final DeleteServerRequest.DeleteAttachedVolumesOption keepAttachedVolumes =
-                req.queryParamOrDefault("deleteVolumes", "false").equals("true") ?
-                        DeleteAttachedVolumes :
-                        KeepAttachedVolumes;
-        return new DeleteServerRequest(serverId, keepAttachedVolumes);
+        return new DeleteServerRequest(serverId, keepOrDeleteAttachedVolumes(req));
+    }
+
+    private DeleteAttachedVolumesOption keepOrDeleteAttachedVolumes(Request req) {
+        return req.queryParamOrDefault("deleteVolumes", "false").equals("true") ?
+                DeleteAttachedVolumes :
+                KeepAttachedVolumes;
     }
 }

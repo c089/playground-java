@@ -32,18 +32,7 @@ public class JavaHTTPServerAdapter {
 
     private void handleRequest(HttpExchange exchange) {
         try {
-            final DeleteServerRequest deleteServerRequest = parseRequest(exchange);
-            final DeleteServerResponse deleteServerResponse = useCase.deleteServer(deleteServerRequest);
-
-            switch (deleteServerResponse) {
-                case DeleteServerResponse.DeletionRequestAccepted r -> {
-                    exchange.getResponseHeaders().put("Content-Type", List.of("application/json"));
-                    exchange.sendResponseHeaders(200, 0);
-                    exchange.getResponseBody().write(JSONFormatter.formatAsJSON(r).getBytes());
-                }
-                case DeleteServerResponse.CannotDeleteNonExistingServer x -> exchange.sendResponseHeaders(404, 0);
-            }
-
+            handleDeleteServerRequest(exchange);
             exchange.close();
         } catch (Exception e) {
             e.printStackTrace();
@@ -51,7 +40,21 @@ public class JavaHTTPServerAdapter {
         }
     }
 
-    private DeleteServerRequest parseRequest(HttpExchange exchange) {
+    private void handleDeleteServerRequest(HttpExchange exchange) throws IOException {
+        final DeleteServerRequest deleteServerRequest = understandRequest(exchange);
+        final DeleteServerResponse deleteServerResponse = useCase.deleteServer(deleteServerRequest);
+
+        switch (deleteServerResponse) {
+            case DeleteServerResponse.DeletionRequestAccepted r -> {
+                exchange.getResponseHeaders().put("Content-Type", List.of("application/json"));
+                exchange.sendResponseHeaders(200, 0);
+                exchange.getResponseBody().write(JSONFormatter.formatAsJSON(r).getBytes());
+            }
+            case DeleteServerResponse.CannotDeleteNonExistingServer ignored -> exchange.sendResponseHeaders(404, 0);
+        }
+    }
+
+    private DeleteServerRequest understandRequest(HttpExchange exchange) {
         final String[] split = exchange.getRequestURI().getPath().split("/server/");
         final ServerID serverID = new ServerID(UUID.fromString(split[1]));
         final DeleteServerRequest.DeleteAttachedVolumesOption deleteAttachedVolumes =

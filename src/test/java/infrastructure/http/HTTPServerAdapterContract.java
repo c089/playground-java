@@ -27,11 +27,12 @@ public abstract class HTTPServerAdapterContract {
         when(useCase.deleteServer(any())).thenReturn(new DeleteServerResponse.CannotDeleteNonExistingServer(serverId));
 
         RestAssured
-                .given()
                 .when()
                 .delete("/server/" + serverId.id().toString())
                 .then()
-                .statusCode(is(equalTo(404)));
+                .statusCode(is(equalTo(404)))
+                .contentType(is(equalTo("application/json")))
+                .body("error", is(equalTo("Server with id " + serverId.id() + " does not exist.")));
     }
 
     @Test
@@ -86,6 +87,19 @@ public abstract class HTTPServerAdapterContract {
                         volume1Id.id().toString(),
                         volume2Id.id().toString()
                 ))));
+    }
+
+    @Test
+    void givenUnknownQueryShouldRejectRequests() {
+        ServerID serverId = new ServerID(UUID.randomUUID());
+
+        RestAssured
+                .when()
+                .delete("/server/" + serverId.id() + "?nonsense=always")
+                .then()
+                .statusCode(is(equalTo(400)))
+                .contentType("application/json")
+                .body("error", is(equalTo("Found unexpected query parameter: \"nonsense\".")));
     }
 
     @BeforeEach

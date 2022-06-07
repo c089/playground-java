@@ -5,7 +5,10 @@ import com.sun.net.httpserver.HttpServer;
 import domain.DeleteServerRequest;
 import domain.DeleteServerResponse;
 import domain.ServerID;
+import infrastructure.http.DeleteServerHTTPRequestParseResult;
 import infrastructure.http.JSONFormatter;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.utils.URIBuilder;
 import ports.driving.DeleteServerUseCase;
 
 import java.io.IOException;
@@ -19,11 +22,14 @@ import static domain.DeleteServerRequest.DeleteAttachedVolumesOption.DeleteAttac
 import static domain.DeleteServerRequest.DeleteAttachedVolumesOption.KeepAttachedVolumes;
 import static domain.DeleteServerResponse.CannotDeleteNonExistingServer;
 import static domain.DeleteServerResponse.DeletionRequestAccepted;
+import static infrastructure.http.DeleteServerHTTPRequestParseResult.InvalidRequest;
+import static infrastructure.http.DeleteServerHTTPRequestParseResult.ValidRequest;
 
 public class JavaHTTPServerAdapter {
 
     private final HttpServer server;
     private final DeleteServerUseCase useCase;
+    private final JSONFormatter jsonFormatter = new JSONFormatter();
 
     public JavaHTTPServerAdapter(DeleteServerUseCase useCase) {
         this.useCase = useCase;
@@ -47,9 +53,16 @@ public class JavaHTTPServerAdapter {
     }
 
     private void handleDeleteServerRequest(HttpExchange exchange) throws IOException {
-        final var request = understandRequest(exchange);
-        final var response = useCase.deleteServer(request);
-        sendResponse(exchange, response);
+        switch (understandRequest(exchange)) {
+            case ValidRequest r -> {
+                final var response = useCase.deleteServer(r.request());
+                sendResponse(exchange, response);
+            }
+            case InvalidRequest invalidRequest -> {
+                sendBadRequestResponse(exchange, invalidRequest);
+            }
+        }
+
     }
 
     private void sendResponse(HttpExchange exchange, DeleteServerResponse deleteServerResponse) throws IOException {
@@ -57,17 +70,32 @@ public class JavaHTTPServerAdapter {
             case DeletionRequestAccepted r -> {
                 exchange.getResponseHeaders().put("Content-Type", List.of("application/json"));
                 exchange.sendResponseHeaders(200, 0);
-                exchange.getResponseBody().write(JSONFormatter.formatAsJSON(r).getBytes());
+                exchange.getResponseBody().write(jsonFormatter.formatAsJSON(r).getBytes());
             }
-            case CannotDeleteNonExistingServer ignored -> exchange.sendResponseHeaders(404, 0);
+            case CannotDeleteNonExistingServer r -> {
+                exchange.getResponseHeaders().put("Content-Type", List.of("application/json"));
+                exchange.sendResponseHeaders(404, 0);
+                exchange.getResponseBody().write(jsonFormatter.formatAsJSON(r).getBytes());
+            }
         }
     }
 
-    private DeleteServerRequest understandRequest(HttpExchange exchange) {
+    private void sendBadRequestResponse(HttpExchange exchange, InvalidRequest r) throws IOException {
+        exchange.getResponseHeaders().put("Content-Type", List.of("application/json"));
+        exchange.sendResponseHeaders(400, 0);
+        exchange.getResponseBody().write(jsonFormatter.formatAsJSON(r).getBytes());
+    }
+
+    private DeleteServerHTTPRequestParseResult understandRequest(HttpExchange exchange) {
         final String[] split = exchange.getRequestURI().getPath().split("/server/");
         final ServerID serverID = new ServerID(UUID.fromString(split[1]));
         final DeleteAttachedVolumesOption deleteAttachedVolumes = keepOrDeleteAttachedVolumes(exchange);
-        return new DeleteServerRequest(serverID, deleteAttachedVolumes);
+        final List<NameValuePair> queryParams = new URIBuilder(exchange.getRequestURI()).getQueryParams();
+        return queryParams.stream()
+                .filter(x -> !x.getName().equals("deleteVolumes")).findFirst().<DeleteServerHTTPRequestParseResult>map(x ->
+                        new InvalidRequest("Found unexpected query parameter: \"%s\".".formatted(x.getName())))
+                .orElseGet(() ->
+                        new ValidRequest(new DeleteServerRequest(serverID, deleteAttachedVolumes)));
     }
 
     private DeleteAttachedVolumesOption keepOrDeleteAttachedVolumes(HttpExchange exchange) {

@@ -47,9 +47,12 @@ public class JavaHTTPServerAdapter {
     }
 
     private void handleDeleteServerRequest(HttpExchange exchange) throws IOException {
-        final DeleteServerRequest deleteServerRequest = understandRequest(exchange);
-        final DeleteServerResponse deleteServerResponse = useCase.deleteServer(deleteServerRequest);
+        final var request = understandRequest(exchange);
+        final var response = useCase.deleteServer(request);
+        sendResponse(exchange, response);
+    }
 
+    private void sendResponse(HttpExchange exchange, DeleteServerResponse deleteServerResponse) throws IOException {
         switch (deleteServerResponse) {
             case DeletionRequestAccepted r -> {
                 exchange.getResponseHeaders().put("Content-Type", List.of("application/json"));

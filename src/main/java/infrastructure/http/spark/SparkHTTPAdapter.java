@@ -7,6 +7,7 @@ import domain.ServerID;
 import infrastructure.http.JSONFormatter;
 import ports.driving.DeleteServerUseCase;
 import spark.Request;
+import spark.Response;
 import spark.Spark;
 
 import java.util.UUID;
@@ -26,21 +27,24 @@ public class SparkHTTPAdapter {
     public void start() {
         Spark.port(8080);
         Spark.delete("/server/:serverId", (req, res) -> {
-            final DeleteServerRequest deleteServerRequest = understandDeleteServerRequest(req);
-            final DeleteServerResponse deleteServerResponse = this.useCase.deleteServer(deleteServerRequest);
-
-            return switch (deleteServerResponse) {
-                case DeletionRequestAccepted x -> {
-                    res.status(200);
-                    res.type("application/json");
-                    yield JSONFormatter.formatAsJSON(x);
-                }
-                case CannotDeleteNonExistingServer x -> {
-                    res.status(404);
-                    yield "";
-                }
-            };
+            final var deleteServerRequest = understandDeleteServerRequest(req);
+            final var deleteServerResponse = this.useCase.deleteServer(deleteServerRequest);
+            return sendResponse(res, deleteServerResponse);
         });
+    }
+
+    private String sendResponse(Response res, DeleteServerResponse deleteServerResponse) {
+        return switch (deleteServerResponse) {
+            case DeletionRequestAccepted x -> {
+                res.status(200);
+                res.type("application/json");
+                yield JSONFormatter.formatAsJSON(x);
+            }
+            case CannotDeleteNonExistingServer x -> {
+                res.status(404);
+                yield "";
+            }
+        };
     }
 
     private DeleteServerRequest understandDeleteServerRequest(Request req) {

@@ -33,15 +33,15 @@ public class SparkHTTPAdapter {
         });
     }
 
-    private String sendResponse(Response res, DeleteServerResponse deleteServerResponse) {
+    private String sendResponse(Response httpResponse, DeleteServerResponse deleteServerResponse) {
         return switch (deleteServerResponse) {
             case DeletionRequestAccepted x -> {
-                res.status(200);
-                res.type("application/json");
+                httpResponse.status(200);
+                httpResponse.type("application/json");
                 yield JSONFormatter.formatAsJSON(x);
             }
             case CannotDeleteNonExistingServer x -> {
-                res.status(404);
+                httpResponse.status(404);
                 yield "";
             }
         };

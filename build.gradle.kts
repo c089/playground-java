@@ -25,7 +25,9 @@ dependencies {
     implementation("org.springframework.data:spring-data-jpa:2.7.0")
     implementation("com.sparkjava:spark-core:2.9.3")
     implementation("com.google.code.gson:gson:2.9.0")
+    implementation("org.apache.httpcomponents:httpclient:4.5.13")
     runtimeOnly("org.slf4j:slf4j-log4j12:1.7.36")
+
 
     implementation("org.hibernate:hibernate-core:5.6.7.Final")
     implementation("org.glassfish.jaxb:jaxb-runtime:3.0.2")

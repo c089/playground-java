@@ -26,13 +26,12 @@ public class SpringDataRepositoryAdapterTest extends RepositoryAdapterContract {
     }
 
     private void setupDatabase() {
-        try (var postgreSQLContainer = new PostgreSQLContainer("postgres:14.2")
+        var postgreSQLContainer = new PostgreSQLContainer("postgres")
                 .withDatabaseName("servers")
                 .withUsername("postgres")
-                .withPassword("postgres")) {
-            postgreSQLContainer.start();
-            System.setProperty("db.port", postgreSQLContainer.getFirstMappedPort().toString());
-        }
+                .withPassword("postgres");
+        postgreSQLContainer.start();
+        System.setProperty("db.port", postgreSQLContainer.getFirstMappedPort().toString());
     }
 
 }

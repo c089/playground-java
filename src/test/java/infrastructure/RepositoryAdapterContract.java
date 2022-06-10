@@ -2,6 +2,7 @@ package infrastructure;
 
 import domain.Server;
 import domain.ServerID;
+import domain.Volume;
 import org.junit.jupiter.api.Test;
 import ports.driven.ServersRepository;
 
@@ -17,7 +18,6 @@ public abstract class RepositoryAdapterContract {
         assertThat(repositoryAdapter.findVolumesAttachedTo(server.id())).isEmpty();
     }
 
-
     @Test
     void givenANonExistingServerItCanNotBeFoundByID() {
         final ServersRepository repositoryAdapter = createRepository();
@@ -30,6 +30,26 @@ public abstract class RepositoryAdapterContract {
         final ServersRepository repositoryAdapter = createRepository();
         final Server server = repositoryAdapter.createServer();
         assertThat(repositoryAdapter.findServerById(server.id())).hasValue(server);
+    }
+
+    @Test
+    void canCreateVolumes() {
+        final ServersRepository repository = createRepository();
+        Volume volume = repository.createVolume();
+        assertThat(repository.findVolumeById(volume.id())).hasValue(volume);
+    }
+
+    @Test
+    void givenANewServerWhenIAttachVolumesThenTheyAreFound() {
+        final ServersRepository repository = createRepository();
+        final Server server = repository.createServer();
+        final Volume volume1 = repository.createVolume();
+        final Volume volume2 = repository.createVolume();
+
+        repository.attachVolume(server.id(), volume1.id());
+        repository.attachVolume(server.id(), volume2.id());
+
+        assertThat(repository.findVolumesAttachedTo(server.id())).containsExactlyInAnyOrder(volume1, volume2);
     }
 
     protected abstract ServersRepository createRepository();

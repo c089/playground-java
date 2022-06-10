@@ -4,5 +4,5 @@ import org.springframework.data.repository.CrudRepository;
 
 import java.util.UUID;
 
-interface SpringBasedServersRepository extends CrudRepository<ServerEntity, UUID> {
+interface ServersCrudRepository extends CrudRepository<ServerEntity, UUID> {
 }

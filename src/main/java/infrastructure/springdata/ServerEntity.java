@@ -6,14 +6,19 @@ import domain.ServerID;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import java.util.Collections;
+import javax.persistence.OneToMany;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
-@Entity
+@Entity(name = "server")
 class ServerEntity {
     @Id
     @Column(name = "id", nullable = false)
     private UUID id;
+
+    @OneToMany(mappedBy = "server")
+    private final Set<VolumeEntity> volumes = new HashSet<>();
 
     public UUID getId() {
         return id;
@@ -24,6 +29,11 @@ class ServerEntity {
     }
 
     Server toDomain() {
-        return new Server(new ServerID(getId()), Collections.emptyList());
+        return new Server(new ServerID(getId()));
     }
+
+    public Set<VolumeEntity> getVolumes() {
+        return volumes;
+    }
+
 }

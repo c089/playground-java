@@ -7,19 +7,18 @@ import domain.VolumeID;
 import io.restassured.RestAssured;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import ports.driving.DeleteServerUseCase;
+import ports.driving.UseCase;
 
-import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import static domain.DeleteServerRequest.DeleteAttachedVolumesOption.KeepAttachedVolumes;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 public abstract class HTTPServerAdapterContract {
-    protected DeleteServerUseCase useCase;
+    protected UseCase useCase;
 
     @Test
     void returns404WhenServerCannotBeFound() {
@@ -72,7 +71,7 @@ public abstract class HTTPServerAdapterContract {
         VolumeID volume2Id = new VolumeID(UUID.randomUUID());
 
         when(useCase.deleteServer(any()))
-                .thenReturn(new DeleteServerResponse.DeletionRequestAccepted(List.of(serverId, volume1Id, volume2Id)));
+                .thenReturn(new DeleteServerResponse.DeletionRequestAccepted(Set.of(serverId, volume1Id, volume2Id)));
 
         RestAssured
                 .given()
@@ -82,11 +81,11 @@ public abstract class HTTPServerAdapterContract {
                 .log().body()
                 .statusCode(is(equalTo(200)))
                 .contentType("application/json")
-                .body("affectedResources", is(equalTo(List.of(
+                .body("affectedResources", containsInAnyOrder(
                         serverId.id().toString(),
                         volume1Id.id().toString(),
                         volume2Id.id().toString()
-                ))));
+                ));
     }
 
     @Test
@@ -104,6 +103,6 @@ public abstract class HTTPServerAdapterContract {
 
     @BeforeEach
     void setUpUseCase() {
-        useCase = mock(DeleteServerUseCase.class);
+        useCase = mock(UseCase.class);
     }
 }

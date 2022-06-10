@@ -6,7 +6,7 @@ import domain.DeleteServerResponse;
 import domain.ServerID;
 import infrastructure.http.DeleteServerHTTPRequestParseResult;
 import infrastructure.http.JSONFormatter;
-import ports.driving.DeleteServerUseCase;
+import ports.driving.UseCase;
 import spark.Request;
 import spark.Response;
 import spark.Spark;
@@ -19,10 +19,10 @@ import static domain.DeleteServerResponse.CannotDeleteNonExistingServer;
 import static domain.DeleteServerResponse.DeletionRequestAccepted;
 
 public class SparkHTTPAdapter {
-    private final DeleteServerUseCase useCase;
+    private final UseCase useCase;
     private final JSONFormatter jsonFormatter = new JSONFormatter();
 
-    public SparkHTTPAdapter(DeleteServerUseCase useCase) {
+    public SparkHTTPAdapter(UseCase useCase) {
         this.useCase = useCase;
     }
 

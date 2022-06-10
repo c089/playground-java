@@ -3,27 +3,35 @@ package infrastructure;
 import domain.Server;
 import domain.ServerID;
 import domain.Volume;
+import domain.VolumeID;
 import ports.driven.ServersRepository;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class InMemoryServersRepositoryAdapter implements ServersRepository {
-    List<Server> servers;
+    private final Set<Volume> volumes;
+    private final Set<Attachment> volumeAttachments;
+    private List<Server> servers;
 
-    public InMemoryServersRepositoryAdapter(List<Server> servers) {
-        this.servers = servers;
+    public InMemoryServersRepositoryAdapter() {
+        this.servers = new ArrayList<>();
+        this.volumes = new HashSet<>();
+        volumeAttachments = new HashSet<>();
     }
 
-    public Stream<Volume> findVolumesAttachedTo(ServerID server) {
-        return servers
-                .stream()
-                .filter(x -> x.id().equals(server)).findFirst().map(Server::volumes)
-                .orElse(Collections.emptyList())
-                .stream();
+    public Set<Volume> findVolumesAttachedTo(ServerID server) {
+        final Set<Attachment> attachments = volumeAttachments.stream().filter(x -> x.server.equals(server)).collect(Collectors.toSet());
+        final Set<VolumeID> volumeIds = attachments.stream().map(x -> x.volume).collect(Collectors.toSet());
+        return volumes.stream().filter(o -> volumeIds.contains(o.id())).collect(Collectors.toSet());
+    }
+
+    @Override
+    public Server createServer() {
+        final Server newServer = new Server(new ServerID(UUID.randomUUID()));
+        this.servers = Stream.concat(this.servers.stream(), Stream.of(newServer)).toList();
+        return newServer;
     }
 
     @Override
@@ -32,9 +40,22 @@ public class InMemoryServersRepositoryAdapter implements ServersRepository {
     }
 
     @Override
-    public Server createServer() {
-        final Server newServer = new Server(new ServerID(UUID.randomUUID()), Collections.emptyList());
-        this.servers = Stream.concat(this.servers.stream(), Stream.of(newServer)).toList();
-        return newServer;
+    public Volume createVolume() {
+        final Volume volume = new Volume(new VolumeID(UUID.randomUUID()));
+        this.volumes.add(volume);
+        return volume;
+    }
+
+    @Override
+    public void attachVolume(ServerID id, VolumeID volumeId) {
+        volumeAttachments.add(new Attachment(id, volumeId));
+    }
+
+    @Override
+    public Optional<Volume> findVolumeById(VolumeID id) {
+        return volumes.stream().filter(x -> x.id().equals(id)).findFirst();
+    }
+
+    record Attachment(ServerID server, VolumeID volume) {
     }
 }

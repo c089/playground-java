@@ -15,9 +15,10 @@ public class SpringDataRepositoryAdapterTest extends RepositoryAdapterContract {
         setupDatabase();
 
         final JpaRepositoryFactory factory = createRepositoryFactory();
-        SpringBasedServersRepository repository = factory.getRepository(SpringBasedServersRepository.class);
+        ServersCrudRepository repository = factory.getRepository(ServersCrudRepository.class);
+        VolumesCrudRepository volumesCrudRepository = factory.getRepository(VolumesCrudRepository.class);
 
-        return new SpringDataServerRepositoryAdapter(repository);
+        return new SpringDataServersRepositoryAdapter(repository, volumesCrudRepository);
     }
 
     private JpaRepositoryFactory createRepositoryFactory() {

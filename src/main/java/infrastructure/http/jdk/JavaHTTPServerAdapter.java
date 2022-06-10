@@ -9,7 +9,7 @@ import infrastructure.http.DeleteServerHTTPRequestParseResult;
 import infrastructure.http.JSONFormatter;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
-import ports.driving.DeleteServerUseCase;
+import ports.driving.UseCase;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -28,10 +28,10 @@ import static infrastructure.http.DeleteServerHTTPRequestParseResult.ValidReques
 public class JavaHTTPServerAdapter {
 
     private final HttpServer server;
-    private final DeleteServerUseCase useCase;
+    private final UseCase useCase;
     private final JSONFormatter jsonFormatter = new JSONFormatter();
 
-    public JavaHTTPServerAdapter(DeleteServerUseCase useCase) {
+    public JavaHTTPServerAdapter(UseCase useCase) {
         this.useCase = useCase;
         try {
             server = HttpServer.create(new InetSocketAddress("localhost", 8080), 0);

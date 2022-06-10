@@ -5,7 +5,7 @@ import domain.ServerID;
 import domain.Volume;
 import ports.driven.ServersRepository;
 
-import java.util.Collections;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -21,12 +21,12 @@ class SpringDataServerRepositoryAdapter implements ServersRepository {
         final ServerEntity entity = new ServerEntity();
         entity.setId(UUID.randomUUID());
         repository.save(entity);
-        return new Server(new ServerID(entity.getId()), Collections.emptyList());
+        return entity.toDomain();
     }
 
     @Override
-    public boolean serverExists(ServerID serverID) {
-        return false;
+    public Optional<Server> findServerById(ServerID id) {
+        return this.repository.findById(id.id()).map(ServerEntity::toDomain);
     }
 
     @Override

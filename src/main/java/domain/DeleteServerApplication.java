@@ -17,7 +17,7 @@ public class DeleteServerApplication implements DeleteServerUseCase {
 
     @Override
     public DeleteServerResponse deleteServer(DeleteServerRequest request) {
-        if (!serversRepository.serverExists(request.serverID())) {
+        if (serversRepository.findServerById(request.serverID()).isEmpty()) {
             return new CannotDeleteNonExistingServer(request.serverID());
         }
 

@@ -7,6 +7,7 @@ import ports.driven.ServersRepository;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -17,16 +18,17 @@ public class InMemoryServersRepositoryAdapter implements ServersRepository {
         this.servers = servers;
     }
 
-    public boolean serverExists(ServerID serverID) {
-        return this.servers.stream().map(Server::id).anyMatch(x -> x.equals(serverID));
-    }
-
     public Stream<Volume> findVolumesAttachedTo(ServerID server) {
         return servers
                 .stream()
                 .filter(x -> x.id().equals(server)).findFirst().map(Server::volumes)
                 .orElse(Collections.emptyList())
                 .stream();
+    }
+
+    @Override
+    public Optional<Server> findServerById(ServerID id) {
+        return servers.stream().filter(x -> x.id().equals(id)).findFirst();
     }
 
     @Override

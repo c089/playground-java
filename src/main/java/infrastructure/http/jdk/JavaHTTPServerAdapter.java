@@ -54,13 +54,8 @@ public class JavaHTTPServerAdapter {
 
     private void handleDeleteServerRequest(HttpExchange exchange) throws IOException {
         switch (understandRequest(exchange)) {
-            case ValidRequest r -> {
-                final var response = useCase.deleteServer(r.request());
-                sendResponse(exchange, response);
-            }
-            case InvalidRequest invalidRequest -> {
-                sendBadRequestResponse(exchange, invalidRequest);
-            }
+            case ValidRequest r -> sendResponse(exchange, useCase.deleteServer(r.request()));
+            case InvalidRequest invalidRequest -> sendBadRequestResponse(exchange, invalidRequest);
         }
 
     }

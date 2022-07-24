@@ -1,24 +1,33 @@
+import java.util.HashMap;
+import java.util.Map;
+
 public class TicTacToe {
     private Player currentPlayer = Player.X;
-    private Field markedField;
+    private final Map<Position, FieldState> fields = new HashMap<>();
 
-    record Field(Position position, FieldState state) {}
     public Field fieldAt(Position position) {
-        if (markedField.position() == position) {
-            return markedField;
-        }
-        return new Field(position, new FieldState.EmptyField());
-
+        return new Field(position, fields.getOrDefault(position, new FieldState.EmptyField()));
     }
 
-    public TurnResult markField(Position position) {
-        if (markedField != null && markedField.position == position) {
-            return new FieldAlreadyMarked(markedField);
-        }
+    public GameState markField(Position position) {
+        GameState gameState = switch (fieldAt(position).mark(this.currentPlayer)) {
+            case MarkFieldResult.FieldAlreadyMarked fieldAlreadyMarked ->
+                    new GameState.GameInProgress(fieldAlreadyMarked);
+            case MarkFieldResult.FieldMarked fieldMarked -> {
+                fields.put(position, fieldMarked.field().state());
+                if (WinningCombination.WINNING_COMBINATIONS.stream().anyMatch(this::winsByCombination)) {
+                    yield new GameState.GameWonBy(currentPlayer);
+                } else {
+                    currentPlayer = currentPlayer.nextPlayer();
+                    yield new GameState.GameInProgress(fieldMarked);
+                }
+            }
+        };
+        return gameState;
+    }
 
-        markedField = new Field(position, FieldState.markedBy(currentPlayer));
-        currentPlayer = currentPlayer.nextPlayer();
-        return new FieldMarked(markedField);
+    private boolean winsByCombination(WinningCombination winningCombination) {
+        return winningCombination.stream().allMatch(position -> fieldAt(position).ownedBy(currentPlayer));
     }
 
 }

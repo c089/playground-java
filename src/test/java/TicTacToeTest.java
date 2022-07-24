@@ -1,10 +1,12 @@
 import net.jqwik.api.*;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class TicTacToeTest {
     @Property
@@ -15,8 +17,8 @@ public class TicTacToeTest {
 
         assertThat(game.fieldAt(position))
                 .isEqualTo(new Field(position, FieldState.markedBy(Player.X)));
-        assertThat(result)
-                .isEqualTo(fieldMarked(position, Player.X));
+        assertThat(result).isEqualTo(
+                new GameState.GameInProgress(Player.O, new Board(Map.of(position, new FieldState.MarkedBy(Player.X)))));
     }
 
     @Property
@@ -41,16 +43,11 @@ public class TicTacToeTest {
 
         assertThat(game.fieldAt(positionChosenByO).state()).isEqualTo(FieldState.markedBy(Player.O));
         assertThat(result)
-                .isEqualTo(fieldMarked(positionChosenByO, Player.O));
-    }
-
-    private GameState.GameInProgress fieldMarked(Position positionChosenByO, Player o) {
-        return new GameState.GameInProgress(new MarkFieldResult.FieldMarked(new Field(positionChosenByO, FieldState.markedBy(o))));
-    }
-
-    @NotNull
-    private GameState.GameInProgress fieldHasAlreadyBeenMarked() {
-        return new GameState.GameInProgress(new MarkFieldResult.FieldAlreadyMarked(new Field(Position.TOP_LEFT, FieldState.markedBy(Player.X))));
+                .isEqualTo(new GameState.GameInProgress(Player.O.nextPlayer(),
+                        new Board(Map.of(
+                                positionChosenByX, FieldState.markedBy(Player.X),
+                                positionChosenByO, FieldState.markedBy(Player.O)
+                        ))));
     }
 
 
@@ -68,7 +65,7 @@ public class TicTacToeTest {
         TicTacToe game = new TicTacToe();
         game.markField(Position.TOP_LEFT);
         GameState turn = game.markField(Position.TOP_LEFT);
-        assertThat(turn).isEqualTo(fieldHasAlreadyBeenMarked());
+        assertThat(turn).isEqualTo(new GameState.GameInProgress(Player.O, new Board(Map.of(Position.TOP_LEFT, FieldState.markedBy(Player.X)))));
         assertThat(game.fieldAt(Position.TOP_LEFT).state()).isEqualTo(FieldState.markedBy(Player.X));
     }
 
@@ -84,7 +81,7 @@ public class TicTacToeTest {
         game.markField(otherFields.get(1));
         GameState turn = game.markField(winningCombination.p3());
 
-        assertThat(turn).isEqualTo(new GameState.GameWonBy(Player.X));
+        assertThat(turn).isEqualTo(new GameState.GameWonBy(Player.X, turn.board()));
     }
 
     @Property
@@ -102,10 +99,30 @@ public class TicTacToeTest {
 
         GameState turn = game.markField(winningCombination.p3());
 
-        assertThat(turn).isEqualTo(new GameState.GameWonBy(Player.O));
+        assertThat(turn).isEqualTo(new GameState.GameWonBy(Player.O, turn.board()));
     }
 
-    @NotNull
+    @Example
+    void cannotPlayOnGameThatHasEnded(
+            @ForAll(supplier = WinningCombinationArbitrary.class) WinningCombination winningCombination) {
+        TicTacToe game = new TicTacToe();
+
+        List<Position> losingCombination = losingCombination(winningCombination).sample();
+
+        game.markField(losingCombination.get(0));
+        game.markField(winningCombination.p1());
+        game.markField(losingCombination.get(1));
+        game.markField(winningCombination.p2());
+        game.markField(losingCombination.get(2));
+        game.markField(winningCombination.p3());
+
+        Position remainingField = Position.allPositionsExcept(Stream.concat(winningCombination.stream(), losingCombination.stream()).toList().toArray(new Position[0])).get(0);
+
+
+        assertThatThrownBy(() -> game.markField(remainingField))
+                .isInstanceOf(IllegalStateException.class).hasMessage("Game has ended.");
+    }
+
     private Arbitrary<List<Position>> losingCombination(WinningCombination winningCombination) {
         return Arbitraries
                 .of(Position.allPositionsExcept(winningCombination.p1(), winningCombination.p2(), winningCombination.p3()))

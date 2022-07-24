@@ -17,19 +17,23 @@ sealed interface GameState {
             return switch (fieldAt(position).mark(player)) {
                 case MarkFieldResult.FieldAlreadyMarked ignored ->
                         this; // TODO signal error to outside? return tuple (MarkFieldResult, GameState)?
-                case MarkFieldResult.FieldMarked fieldMarked -> {
-                    Board board = board().mark(position, fieldMarked.field().state());
-                    if (WinningCombination.WINNING_COMBINATIONS.stream().anyMatch(winningCombination -> winsByCombination(winningCombination, currentPlayer()))) {
-                        yield new GameWonBy(player, board);
-                    } else {
-                        yield new GameInProgress(player.nextPlayer(), board);
-                    }
-                }
+                case MarkFieldResult.FieldMarked fieldMarked -> nextState(position, player, fieldMarked);
             };
         }
 
-        boolean winsByCombination(WinningCombination winningCombination, Player p) {
-            return winningCombination.stream().allMatch(position -> fieldAt(position).ownedBy(p));
+        private GameState nextState(Position position, Player player, MarkFieldResult.FieldMarked fieldMarked) {
+            Board board = board().mark(position, fieldMarked.field().state());
+
+            if (hasWon(player)) {
+                return new GameWonBy(player, board);
+            } else {
+                return new GameInProgress(player.nextPlayer(), board);
+            }
         }
+
+        private boolean hasWon(Player p) {
+            return WinningCombination.hasMarkedAWinningCombination(board().positionsMarkedBy(p));
+        }
+
     }
 }

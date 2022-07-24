@@ -1,3 +1,4 @@
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -33,4 +34,9 @@ record WinningCombination(Position p1, Position p2, Position p3) {
         return Stream.of(p1, p2, p3);
     }
 
+    static boolean hasMarkedAWinningCombination(List<Position> markedByPlayer) {
+        return WINNING_COMBINATIONS.stream().anyMatch(winningCombination ->
+                markedByPlayer.containsAll(winningCombination.stream().toList())
+        );
+    }
 }

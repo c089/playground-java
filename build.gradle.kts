@@ -12,9 +12,9 @@ group = "org.example"
 version = "1.0-SNAPSHOT"
 
 val jqwikVersion = "1.6.5"
-val hamcrestVersion = "2.2"
 val junitVersion = "5.8.2"
 val mockitoVersion = "3.+"
+val assertJversion = "3.23.1"
 
 repositories {
     mavenCentral()
@@ -38,10 +38,9 @@ dependencies {
 
     testImplementation(platform("org.junit:junit-bom:${junitVersion}"))
     testImplementation("org.junit.jupiter:junit-jupiter:${junitVersion}")
-    testImplementation("org.hamcrest:hamcrest:${hamcrestVersion}")
+    testImplementation("org.assertj:assertj-core:${assertJversion}")
     testImplementation("net.jqwik:jqwik:${jqwikVersion}")
     testImplementation("org.mockito:mockito-core:${mockitoVersion}")
-    testImplementation("org.assertj:assertj-core:3.22.0")
     testImplementation("io.rest-assured:rest-assured:5.1.0")
 }
 

@@ -11,7 +11,7 @@ java {
 group = "org.example"
 version = "1.0-SNAPSHOT"
 
-val jqwikVersion = "1.6.4"
+val jqwikVersion = "1.6.5"
 val hamcrestVersion = "2.2"
 val junitVersion = "5.8.2"
 val mockitoVersion = "3.+"
